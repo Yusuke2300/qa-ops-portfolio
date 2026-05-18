@@ -1,0 +1,37 @@
+name: Playwright Tests
+
+# トリガーの定義：mainブランチにコードがPushされたら自動起動する
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    # クラウド上にLinux（Ubuntu）の仮想サーバーを1台用意する
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. GitHub上のあなたのコードを仮想サーバーにコピーする
+    - uses: actions/checkout@v4
+
+    # 2. 仮想サーバーにPython環境を構築する
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+
+    # 3. 必要なツール（Pytest, Playwright）をインストールする
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest-playwright
+
+    # 4. ブラウザ本体をインストールする（※クラウド上なので画面なしのHeadlessで動く）
+    - name: Install Playwright Browsers
+      run: python -m playwright install chromium
+
+    # 5. テストを自動実行する（※ここでは --headed は付けない）
+    - name: Run Playwright tests
+      run: python -m pytest test_login.py
