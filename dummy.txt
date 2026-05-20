@@ -1,0 +1,5 @@
+qa_ops_learning/
+  ├── dummy.txt        <-- これを作った
+  ├── test_dropdown.py
+  ├── test_login.py
+  └── ...

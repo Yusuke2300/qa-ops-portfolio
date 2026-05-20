@@ -1,18 +1,23 @@
+import pytest
 from playwright.sync_api import Page, expect
+from login_page import LoginPage
 
-# 関数名を「test_」から始めるのがPytestの絶対ルール
-# 引数に「page」と入れるだけで、裏で勝手にブラウザを立ち上げて渡してくれる
-def test_login(page: Page):
-    # 1. ターゲットサイトへ移動
-    page.goto("http://quotes.toscrape.com/")
-    
-    # 2. ログイン画面への移動
-    page.get_by_role("link", name="Login").click()
-    
-    # 3. 認証情報の入力と実行
-    page.locator("#username").fill("admin")
-    page.locator("#password").fill("password")
-    page.get_by_role("button", name="Login").click()
+# 【データ駆動】3人分の異なるIDとパスワードのリストを用意する
+test_users = [
+    ("admin", "password"),
+    ("test_user_1", "123456"),
+    ("test_user_2", "qwerty")
+]
 
-    # 4. アサーション（検証処理）
+# @pytest.mark.parametrize を使うと、リストのデータを順番にテストに流し込んでくれる
+@pytest.mark.parametrize("username, password", test_users)
+def test_login_success(page: Page, username: str, password: str):
+    # 【手順の開始】ここは1回だけ書けばいい
+    login_page = LoginPage(page)
+    login_page.navigate()
+    
+    # 流し込まれた変数（username, password）を使ってログインする
+    login_page.login(username, password)
+    
+    # ログアウトボタンが表示されることを確認
     expect(page.get_by_role("link", name="Logout")).to_be_visible()

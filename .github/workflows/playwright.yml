@@ -1,6 +1,5 @@
 name: Playwright Tests
 
-# トリガーの定義：mainブランチにコードがPushされたら自動起動する
 on:
   push:
     branches: [ main ]
@@ -9,29 +8,34 @@ on:
 
 jobs:
   test:
-    # クラウド上にLinux（Ubuntu）の仮想サーバーを1台用意する
     runs-on: ubuntu-latest
 
     steps:
-    # 1. GitHub上のあなたのコードを仮想サーバーにコピーする
     - uses: actions/checkout@v4
 
-    # 2. 仮想サーバーにPython環境を構築する
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.9'
 
-    # 3. 必要なツール（Pytest, Playwright）をインストールする
+    # 【変更箇所1】pytest-html をインストールさせる
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest-playwright
+        pip install pytest-playwright pytest-html
 
-    # 4. ブラウザ本体をインストールする（※クラウド上なので画面なしのHeadlessで動く）
     - name: Install Playwright Browsers
       run: python -m playwright install chromium
 
-    # 5. テストを自動実行する（※ここでは --headed は付けない）
-    - name: Run Playwright tests
-      run: python -m pytest test_login.py
+    # 【変更箇所2】レポートを出力するコマンドに変更する
+    - name: Run Playwright tests and generate report
+      run: python -m pytest --html=report.html --self-contained-html
+
+    # 【新規追加】クラウド上で生成された report.html を「成果物」として保存する
+    - name: Upload HTML report
+      uses: actions/upload-artifact@v4
+      if: always() # テストが途中で失敗(エラー)しても、必ずレポートは保存させるための絶対条件
+      with:
+        name: playwright-report # 保存されるZIPファイルの名前
+        path: report.html
+        retention-days: 14 # サーバーの容量節約のため、14日で自動削除する設定
